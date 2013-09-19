@@ -2,23 +2,23 @@ module.exports = function(grunt) {
 	grunt.initConfig({
 		watch: {
 			src: {
-				files: ['public/app.js']
+				files: ['app.js']
 			},
 			less: {
-				files: ['public/style.less'],
+				files: ['style.less'],
 				tasks: ['less'],
 				options: {
 					livereload: false
 				}
 			},
 			css: {
-				files: ['public/style.css'],
+				files: ['style.css'],
 				options: {
 					livereload: true
 				}
 			},
 			html: {
-				files: ['public/index.html']
+				files: ['index.html']
 			},
 			options: {
 				livereload: true
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
 		less: {
 			production: {
 				files: {
-					"public/style.css": "public/style.less"
+					"style.css": "style.less"
 				}
 			}
 		}

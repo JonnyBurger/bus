@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Wann kommt mein Bus?</title>
+	<script src="lib/$.js"></script>
+	<script src="lib/_.js"></script>
+	<script src="lib/fastclick.js"></script>
+	<script src="app.js"></script>
+	<script src="http://localhost:35729/livereload.js"></script>
+	<link rel="stylesheet" href="style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+</head>
+<body>
+	<h1 id="title"><span id="title1">wann kommt</span> <span id="title2">mein bus?</span></h1>
+	<div class="tile" id="loading">
+		<h1>Bitte kurz warten...</h1>
+		<p id="loading-message">Deine Position wird gerade bestimmt.</p>
+	</div>
+	<script>
+		window.addEventListener('load', function () {
+			FastClick.attach(document.body);
+		}, false);
+		bus.request.location({callback: bus.request.station});
+		bus.ui.setUpEvents();
+	</script>
+</body>
+</html>
