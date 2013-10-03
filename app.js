@@ -66,12 +66,8 @@ bus.request = {
 			success: function(data) {
 				var connections 		= _.map(data.stationboard, 		function (connection) { return _.pick(connection, 'category', 'categoryCode', 'number', 'to', 'stop', 'name'); }),
 					connections 		= _.map(connections,			function (connection) { 
-						connection.stop.until = (new Date(connection.stop.departure.substr(0, 19)) - new Date());
-						if (/WebKit/.test(navigator.userAgent)) {
-							connection.stop.until -= 120*60*1000;
-						}
-						return connection;
-						
+						connection.stop.until = bus.ui.fixTimeZone(connection.stop.departure);
+						return connection
 					}),
 					connections 		= _.map(connections, 			function (connection) { connection.stop = _.pick(connection.stop, 'platform', 'departure', 'until', 'location'); return connection }),
 					connections 		= _.groupBy(connections,		function (connection) { return connection.to }),
@@ -84,19 +80,7 @@ bus.request = {
 		})
 	},
 	ride: function (stop) {
-		$.ajax({
-			url: 'http://tunechilla.com:5000/stops',
-			data: {
-				from: 	'008573027',
-				to: 	'008508450',
-				date: 	'20130927',
-				time: 	'14:00'
-			},
-			dataType: 'json',
-			success: function (data) {
-				//bus.ui.createRide(data)
-			}
-		});
+		bus.ui.switchTitle('Lade Informationen...')
 		$.ajax({
 			url: 'http://transport.opendata.ch/v1/connections',
 			data: {
@@ -107,7 +91,14 @@ bus.request = {
 			},
 			dataType: 'json',
 			success: function (data) {
-				bus.ui.createRide(data.connections[0].sections[0].journey.passList)
+				var passList = data.connections[0].sections[0].journey.passList;
+				console.log('passList:', passList)
+				passList = _.map(passList, function (connection) { 
+					connection.until = bus.ui.fixTimeZone(connection.departure || connection.arrival);
+					return connection;
+				});
+				bus.ui.createRide(passList);
+				bus.ui.switchTitle('Wann kommt mein Bus?')
 			}
 		})
 	}
@@ -317,13 +308,38 @@ bus.ui = {
 		var html = _.template(bus.templates.board, {connections: connections, helpers: bus.helpers });
 		$('#tiles').append(html);
 		document.getElementsByClassName('destination')[0].style.display = 'block';
+
 	},
 	createRide: function (data) {
-		console.log(data);
-		var html = _.template(bus.templates.ride, {data: data});
+		var random = Math.floor(Math.random()*10000000),
+			html = _.template(bus.templates.ride, {data: data, random: random});
 		$('.tile').remove()
 		$('#tiles').append(html);
-
+		bus.ui.updateRide({id: random, data: data});
+	},
+	updateRide: function (obj) {
+		var ride = document.querySelector('[data-ride="' + obj.id + '"]'),
+			segmentfound = false,
+			place = _.each(obj.data, function (stop, key) {
+			var next = obj.data[key+1];
+			if (next != undefined) {
+				var nextstation = bus.ui.fixTimeZone(next.arrival ? next.arrival : next.departure),
+					prevstation = bus.ui.fixTimeZone(stop.arrival || stop.departure);
+				if (nextstation < 0) {
+					$(ride).find('.stationspacefill').eq(key).css('height', '100%')
+				}
+				if (nextstation > 0 && prevstation < 0) {
+					if (segmentfound) { return; }
+					segmentfound = true;
+					progress = Math.abs(prevstation) / (Math.abs(prevstation) + nextstation);
+					console.log(progress);
+					$(ride).find('.stationspacefill').eq(key).css('height', progress*100 + '%')
+				}
+			}
+		});
+		setTimeout(function() {
+			bus.ui.updateRide(obj)
+		}, 500);
 	},
 	setUpEvents: function() {
 		$(document)
@@ -369,6 +385,18 @@ bus.ui = {
 			$(bus.title2).hide()
 			$(bus.title1).text(text).show();
 		}
+	},
+	fixTimeZone: function (date) {
+		if (typeof date == 'object') {
+			var a = date - new Date()
+		}
+		else {
+			var a = (new Date(date.substr(0, 19)) - new Date());
+			if (/WebKit/.test(navigator.userAgent)) {
+				a -= 120*60*1000;
+			}
+		}
+		return a;
 	}
 }
 bus.templates = {
@@ -487,19 +515,20 @@ bus.templates = {
 			"<h2>Du bist im Bus von</h2>",
 			"<h3><%= bus.helpers.isoFix(data[0].station.name) %> <span class='lighttext'>nach</span> <%= bus.helpers.isoFix(_.last(data).station.name) %></h3>",
 		"</div>",
-		"<div class='tile nomargin'>",
+		"<div class='tile nomargin' data-ride='<%= random %>'>",
 			"<ul class='ride-stops'>",
-			"<div class='ride-dot first-dot'></div>",
-				"<% _.each(data, function(stop, index) { %>",
-					"<li class='ride-stop'>",
-						"<% if (index != data.length-1) {%>",
-							"<div class='stationspace'>",
-								"<div class='stationspacefill'></div>",
-							"</div>",
-						"<% } %>",
-						"<%= bus.helpers.parseStation(bus.helpers.isoFix(stop.station.name)) %>",
-					"</li>",
-				"<% }); %>",
+				"<div class='ride-dot first-dot'></div>",
+					"<% _.each(data, function(stop, index) { %>",
+						"<li class='ride-stop'>",
+							"<% if (index != data.length-1) {%>",
+								"<div class='stationspace'>",
+									"<div class='stationspacefill'></div>",
+								"</div>",
+							"<% } %>",
+							"<span class='bus-stop-time'><%= bus.helpers.getTimeUntilFromDate(stop.until) %></span>",
+							"<%= bus.helpers.parseStation(bus.helpers.isoFix(stop.station.name)) %>",
+						"</li>",
+					"<% }); %>",
 				"<div class='ride-dot last-dot'></div>",
 			"</ul>",
 		"</div>"
