@@ -1,11 +1,10 @@
 {
   "name": "wann_kommt_mein_bus",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-watch": "~0.5.2"
   },
   "dependencies": {
-    "paperboy": "0.0.5"
   }
 }

@@ -2,22 +2,30 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Wann kommt mein Bus?</title>
+	<title>Bus</title>
 	<script src="lib/$.js"></script>
 	<script src="lib/_.js"></script>
 	<script src="lib/fastclick.js"></script>
-	<script src="app.js"></script>
 	<script src="http://localhost:35729/livereload.js"></script>
 	<link rel="stylesheet" href="style.css">
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link href="img/640920.png" media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)" rel="apple-touch-startup-image">
+	<link rel="apple-touch-icon" sizes="120x120" href="img/120x120.png">
+	<link rel="apple-touch-icon" sizes="114x114" href="img/114x114.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="img/144x144.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="img/152x152.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="img/72x72.png">
+	<link rel="apple-touch-icon" sizes="57x57" href="img/57x57.png">
+
+    </head>
 </head>
 <body>
-	<h1 id="title"><span id="title1">wann kommt</span> <span id="title2">mein bus?</span></h1>
-	<div class="tile" id="loading">
-		<h1>Bitte kurz warten...</h1>
-		<p id="loading-message">Deine Position wird gerade bestimmt.</p>
+	<header><h1 id="title"><span id="title1">Position wird bestimmt...</span><span id="title2"></span></h1></header>
+	<div id="tiles">
 	</div>
+	<script src="app.js"></script>
 	<script>
 		window.addEventListener('load', function () {
 			FastClick.attach(document.body);
