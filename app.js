@@ -330,6 +330,8 @@ bus.ui = {
 				}
 				if (nextstation > 0 && prevstation < 0) {
 					if (segmentfound) { return; }
+					$('.activestation').removeClass('activestation')
+					$(ride).find('.ride-stop').eq(key+1).addClass('activestation');
 					segmentfound = true;
 					progress = Math.abs(prevstation) / (Math.abs(prevstation) + nextstation);
 					console.log(progress);

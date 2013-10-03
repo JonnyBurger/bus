@@ -255,6 +255,21 @@ header {
   margin-left: -10px;
   margin-right: 5px;
 }
+@-webkit-keyframes blinktext {
+  0% {
+    color: inherit;
+  }
+  40% {
+    color: #2980b9;
+  }
+  70% {
+    color: inherit;
+  }
+}
+.tile .ride-stops .activestation {
+  color: #2980b9;
+  -webkit-animation: 2s  blinktext alternate infinite;
+}
 .tile .ride-stops .stationspace {
   background: #f2f2f2;
   height: 37px;

@@ -260,6 +260,21 @@ header {
 				margin-right: 5px;
 			}
 		}
+		@-webkit-keyframes blinktext {
+			0% {
+				color: inherit;
+			}
+			40% {
+				color: @blue;
+			}
+			70% {
+				color: inherit;
+			}
+		}
+		.activestation {
+			color: @blue;
+			-webkit-animation: 2s  blinktext alternate infinite;
+		}
 		.stationspace {
 			background: lighten(black, 95%);
 			height: 37px;
