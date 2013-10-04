@@ -92,7 +92,6 @@ bus.request = {
 			dataType: 'json',
 			success: function (data) {
 				var passList = data.connections[0].sections[0].journey.passList;
-				console.log('passList:', passList)
 				passList = _.map(passList, function (connection) { 
 					connection.until = bus.ui.fixTimeZone(connection.departure || connection.arrival);
 					return connection;
@@ -294,6 +293,19 @@ bus.helpers = {
 	isoFix: function (string) {
 		var string = string.replace(/�/g, 'ü');
 		return string;
+	},
+	coordinateCalculator: function(lat1, lat2, lon1, lon2) {
+		var R = 6378.137; // km
+		var dLat = (lat2-lat1).toRad();
+		var dLon = (lon2-lon1).toRad();
+		var lat1 = lat1.toRad();
+		var lat2 = lat2.toRad();
+
+		var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+		        Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		var d = R * c;
+		return d;
 	}
 }
 bus.ui = {
@@ -318,9 +330,11 @@ bus.ui = {
 		bus.ui.updateRide({id: random, data: data});
 	},
 	updateRide: function (obj) {
-		var ride = document.querySelector('[data-ride="' + obj.id + '"]'),
+		var ride = document.querySelector('.ride[data-ride="' + obj.id + '"]'),
 			segmentfound = false,
-			place = _.each(obj.data, function (stop, key) {
+			spaceprogress,
+			nextstationkey;
+		_.each(obj.data, function (stop, key) {
 			var next = obj.data[key+1];
 			if (next != undefined) {
 				var nextstation = bus.ui.fixTimeZone(next.arrival ? next.arrival : next.departure),
@@ -331,17 +345,54 @@ bus.ui = {
 				if (nextstation > 0 && prevstation < 0) {
 					if (segmentfound) { return; }
 					$('.activestation').removeClass('activestation')
-					$(ride).find('.ride-stop').eq(key+1).addClass('activestation');
+					var busstop = $(ride).find('.ride-stop').eq(key+1)[0];
+					if (!busstop.classList.contains('activestation')) {
+						var active = document.querySelector('.activestation');
+						if (active) {
+							active.classList.remove('activestation');
+						}
+						busstop.classList.add('activestation');
+					}
 					segmentfound = true;
-					progress = Math.abs(prevstation) / (Math.abs(prevstation) + nextstation);
-					console.log(progress);
-					$(ride).find('.stationspacefill').eq(key).css('height', progress*100 + '%')
+					spaceprogress = Math.abs(prevstation) / (Math.abs(prevstation) + nextstation);
+					nextstationkey = key;
+					$(ride).find('.stationspacefill').eq(key).css('height', spaceprogress*100 + '%')
 				}
 			}
 		});
+		var firstdeparture = obj.data[0].departure,
+			untilfirstdeparture = bus.ui.fixTimeZone(firstdeparture);
+		if (untilfirstdeparture > 0) {
+			var timeleft = bus.helpers.timeLeftToNumber(untilfirstdeparture);
+			$('.timer').text(timeleft.number + ' ' + timeleft.unit);
+		}
+		else {
+			$('.before-departure').removeClass('before-departure');
+			var lastarrival = _.last(obj.data).arrival;
+			untillastarrival = bus.helpers.timeLeftToNumber(bus.ui.fixTimeZone(lastarrival));
+			$('.timer').text('Ankunft in '+ untillastarrival.number + ' ' + untillastarrival.unit);
+			var totaldistance = _.reduce(obj.data, function (memo, location, key) {
+				if (!obj.data[key+1]) {return memo;}
+				var distance = bus.helpers.coordinateCalculator(location.location.coordinate.y, obj.data[key+1].location.coordinate.y, location.location.coordinate.x, obj.data[key+1].location.coordinate.x);
+				return memo + distance
+			}, 0)*1.15;
+			var distanceridden = _.reduce(obj.data, function (memo, location, key) {
+				if (!obj.data[key+1]) { return memo; }
+				if (key-1 > nextstationkey) { return memo; }
+				var prog = bus.ui.fixTimeZone(obj.data[key+1].arrival || obj.data[key+1].departure);
+				var distance = bus.helpers.coordinateCalculator(location.location.coordinate.y, obj.data[key+1].location.coordinate.y, location.location.coordinate.x, obj.data[key+1].location.coordinate.x);
+				if (prog < 0) {
+					return memo + distance
+				}
+				else {
+					return memo + distance*spaceprogress;
+				}
+			}, 0)*1.15;
+			$('.top-ride-tile').html(_.template(bus.templates.rideinfos, {time: untillastarrival, distanceridden: distanceridden, totaldistance: totaldistance}))
+		}
 		setTimeout(function() {
 			bus.ui.updateRide(obj)
-		}, 500);
+		}, 1000);
 	},
 	setUpEvents: function() {
 		$(document)
@@ -451,15 +502,12 @@ bus.templates = {
 							"<% } %>",
 						"</div>",
 						"<div class='destination'>",
-							"<% var first = line.splice(0,1)[0]; console.log(first) %>",
+							"<% var first = line.splice(0,1)[0]; %>",
 							"<% var time = helpers.timeLeftToNumber(first.stop.until), id = Math.floor(Math.random()*1000000) %>",
 							"<% helpers.updateTimeLeft(id, first.stop.until, first.categoryCode) %>",
 							"<table>",
 								"<td>",
 									"<%= _.template(bus.templates.time, {time: time, id: id, category: first.categoryCode}) %>",
-									"<div class='list'>",
-										"<div class='reveal boarding' data-start='<%= first.stop.location.id %>' data-end='<%= first.to %>' data-date='<%= first.stop.departure %>'>Einsteigen</div>",
-									"</div>",
 								"</td>",
 								"<td>",
 									"<% if (line.length != 0) { %>",
@@ -474,6 +522,9 @@ bus.templates = {
 											"</ul>",
 										"</div>",
 									"<% } %>",
+									"<div class='list'>",
+										"<div class='reveal boarding' data-start='<%= first.stop.location.id %>' data-end='<%= first.to %>' data-date='<%= first.stop.departure %>'>Einsteigen</div>",
+									"</div>",
 								"</td>",
 							"</table>",
 						"</div>",
@@ -513,12 +564,15 @@ bus.templates = {
 
 	].join('\n'),
 	ride: [
-		"<div class='tile'>",
-			"<h2>Du bist im Bus von</h2>",
-			"<h3><%= bus.helpers.isoFix(data[0].station.name) %> <span class='lighttext'>nach</span> <%= bus.helpers.isoFix(_.last(data).station.name) %></h3>",
+		"<div class='tile before-departure top-ride-tile'>",
+			"<div class='ride-dot'></div>",
+			"<div class='stationspace toptile'></div>",
+			"<h3 class='dotinfront'><%= bus.helpers.isoFix(data[0].station.name) %></h3>",
+			"<p class='dotinfront lighttext'>Abfahrt in <span class='timer' data-ride='<%= random %>'>3 Minuten</span></p>",
 		"</div>",
-		"<div class='tile nomargin' data-ride='<%= random %>'>",
+		"<div class='tile nomargin ride before-departure' data-ride='<%= random %>'>",
 			"<ul class='ride-stops'>",
+				"<div class='stationspace-extension'></div>",
 				"<div class='ride-dot first-dot'></div>",
 					"<% _.each(data, function(stop, index) { %>",
 						"<li class='ride-stop'>",
@@ -534,5 +588,10 @@ bus.templates = {
 				"<div class='ride-dot last-dot'></div>",
 			"</ul>",
 		"</div>"
+	].join('\n'),
+	rideinfos: [
+		"<h1><%= time.number %> <small><%= time.unit %></small></h1>",
+		"<p><span><%= Math.round(distanceridden*100)/100 %>/<%= Math.round(totaldistance*100)/100 %>km</span> - <span><%= Math.round(distanceridden/totaldistance*10000)/100 %>%</span></p>"
 	].join('\n')
 }
+Number.prototype.toRad = function() { return this * (Math.PI / 180); };
