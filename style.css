@@ -7,13 +7,37 @@ body {
   margin: 0;
   overflow-x: hidden;
 }
+small {
+  font-size: 1em;
+}
 header {
   background: #2980b9;
   height: 50px;
   position: fixed;
   width: 100%;
   top: 0px;
-  z-index: 2;
+  z-index: 3;
+}
+header #back {
+  display: none;
+  position: absolute;
+  padding-top: 25px;
+  padding-bottom: 9px;
+  padding-left: 4px;
+  padding-right: 4px;
+  color: rgba(255, 255, 255, 0.8);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9em;
+  z-index: 3;
+}
+header #back:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+.center {
+  text-align: center;
+}
+header.enable-back #back {
+  display: block;
 }
 #title {
   font-size: 1em;
@@ -40,35 +64,54 @@ header {
 .tile:first-child {
   margin-top: 60px;
 }
+.tile.invisible {
+  display: none;
+}
 .tile {
   background: #fbfcfc;
-  padding: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   margin-bottom: 10px;
-  color: #555;
-  border-radius: 2px;
+  padding-top: 10px;
+  color: #333;
+  border-radius: 3px 3px 2px 2px;
+  border-bottom: 3px solid #55a5d9;
   margin: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.tile table.buttons {
+  width: 100%;
+}
+.tile button {
+  color: #2472a4;
+  font-family: 'Helvetica Neue', Arial, Helvetica;
+  background: none;
+  border: none;
+  font-size: 1em;
+  outline: none;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+}
+.tile button:active {
+  color: #3498db;
 }
 .tile h1,
 .tile h2 {
   margin-top: 0;
   margin-bottom: 0;
+  padding-left: 10px;
 }
 .tile h1 {
   margin-top: 0;
-  margin-bottom: 5px;
-  font-size: 1.4em;
-  font-weight: 500;
-}
-.tile h1 small {
-  opacity: 0.8;
+  margin-bottom: 0px;
+  font-size: 1.55em;
+  font-weight: 400;
 }
 .tile h2 {
-  font-size: 1em;
-  opacity: 0.8;
-  font-size: 0.9em;
+  opacity: 0.6;
+  font-size: 1.1em;
+  font-weight: 300;
+  letter-spacing: 0.02em;
 }
 .tile h3 {
   font-size: 1em;
@@ -76,7 +119,7 @@ header {
   margin-bottom: 5px;
 }
 .tile .dotinfront {
-  left: 20px;
+  left: 30px;
   position: relative;
   top: -7px;
 }
@@ -121,10 +164,8 @@ header {
 .tile .list .boarding {
   padding-top: 5px;
 }
-.tile .option,
-.tile .destination {
-  margin-left: -10px;
-  margin-right: -10px;
+.tile .option {
+  padding-left: 10px;
 }
 .tile .option {
   background: rgba(255, 255, 255, 0.6);
@@ -132,7 +173,7 @@ header {
   padding-left: 10px;
   opacity: 0.8;
   font-weight: 400;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 .tile .option small {
   opacity: 0.8;
@@ -149,7 +190,7 @@ header {
   color: #3498db;
 }
 .tile .option:first-child {
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 @-webkit-keyframes updateblink {
   from {
@@ -161,21 +202,18 @@ header {
 }
 .tile .destination {
   display: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 5px;
-  padding-left: 10px;
+  padding-left: 0;
   overflow: hidden;
 }
-.tile .destination table {
-  width: 100%;
-}
-.tile .destination table td:nth-child(1) {
+.tile .destination td:nth-child(1) {
   width: 130px;
   vertical-align: top;
 }
 @-webkit-keyframes drive {
   from {
-    -webkit-transform: translate(-130px);
+    -webkit-transform: translate(-230px);
   }
   to {
     -webkit-transform: translate(0);
@@ -189,33 +227,35 @@ header {
     -webkit-transform: scale(1, 1);
   }
 }
-.tile .destination table #leftpane img {
+.tile .destination #leftpane img {
   opacity: 0.8;
 }
-.tile .destination table #leftpane img.slidein {
-  -webkit-animation: drive 1.3s;
+.tile .destination #leftpane img.slidein {
+  -webkit-animation: drive 1.8s;
+  text-align: center;
 }
-.tile .destination table #leftpane img.scalein {
+.tile .destination #leftpane img.scalein {
   -webkit-animation: scalein 1s;
+  text-align: center;
 }
 .tile .destination .time-wrapper h2 {
   width: 130px;
-  text-align: center;
-  font-weight: 400;
-  font-size: 14px;
 }
 .tile .destination .time-wrapper h1 {
-  font-size: 6em;
-  width: 130px;
-  text-align: center;
-  margin-top: -20px;
+  font-size: 4em;
+  margin-top: -10px;
   -webkit-animation: updateblink 0.4s;
 }
-.tile .destination .time-wrapper h1 p {
-  font-size: 14px;
-  opacity: 0.8;
-  margin-top: -15px;
+.tile .destination .time-wrapper h1 span {
+  padding-left: 10px;
+}
+.tile .destination p {
+  padding-left: 10px;
   font-weight: 400;
+  font-size: 0.8em;
+  padding-top: 10px;
+  color: rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.01em;
 }
 .tile .destination .busnumber {
   padding: 5px;
@@ -294,10 +334,10 @@ header {
   margin-top: -34px;
 }
 .tile .stationspace {
-  background: #e7f2fa;
+  background: #cccccc;
   height: 37px;
   width: 8px;
-  left: 21px;
+  left: 22px;
   margin-top: 10px;
   position: absolute;
   border-top: 1px solid #ffffff;
@@ -310,8 +350,11 @@ header {
   position: absolute;
   top: 15px;
   z-index: 0;
-  height: 40px;
+  height: 30px;
   border-bottom: none;
+}
+.top-ride-tile {
+  margin-top: 60px;
 }
 .before-departure .first-dot {
   display: none;
@@ -321,11 +364,11 @@ header {
 }
 .before-departure .stationspace-extension {
   width: 8px;
-  background: #e7f2fa;
+  background: #cccccc;
   position: absolute;
   height: 20px;
   margin-top: -10px;
-  left: 21px;
+  left: 22px;
 }
 .board {
   padding-top: 0;
@@ -391,7 +434,7 @@ header {
   margin-right: -15px;
   width: -webkit-calc(100% + 30px);
   width: -moz-calc(100% + 30px);
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   height: 200px;
 }
 #map {
@@ -442,15 +485,4 @@ header {
     -moz-transform: scale(2, 2);
     opacity: 0;
   }
-}
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-top: 10px;
-  left: 50%;
-  margin-left: -4px;
-  position: relative;
-  background: #dedede;
-  border: 1px solid rgba(0, 0, 0, 0.1);
 }
